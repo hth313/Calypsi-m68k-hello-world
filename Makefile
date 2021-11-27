@@ -28,7 +28,7 @@ obj/%-debug.o: %.s
 obj/%-debug.o: %.c
 	cc68k --core=68000 $(MODEL) --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
-hello.elf: $(OBJS_DEBUG)
+hello.elf: $(OBJS_DEBUG) $(FOENIX_LIB)
 	ln68k --debug -o $@ $^ $(FOENIX_LINKER_RULES) clib-68000-$(LIB_MODEL).a --list-file=hello-debug.lst --cross-reference --rtattr printf=reduced --semi-hosted
 
 hello.pgz:  $(OBJS) $(FOENIX_LIB)
