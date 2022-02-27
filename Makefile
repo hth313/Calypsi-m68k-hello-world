@@ -10,7 +10,7 @@ MODEL = --code-model=large --data-model=small
 LIB_MODEL = lc-sd
 
 FOENIX_LIB = $(FOENIX)/foenix-$(LIB_MODEL).a
-FOENIX_LINKER_RULES = $(FOENIX)/linker-files/a2560u.scm
+FOENIX_LINKER_RULES = $(FOENIX)/linker-files/a2560u-simplified.scm
 
 # Object files
 OBJS = $(ASM_SRCS:%.s=obj/%.o) $(C_SRCS:%.c=obj/%.o)
@@ -29,10 +29,11 @@ obj/%-debug.o: %.c
 	cc68k --core=68000 $(MODEL) --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
 hello.elf: $(OBJS_DEBUG)
-	ln68k --debug -o $@ $^ $(FOENIX_LINKER_RULES) clib-68000-$(LIB_MODEL).a --list-file=hello-debug.lst --cross-reference --rtattr printf=reduced --semi-hosted
+	ln68k --debug -o $@ $^ $(FOENIX_LINKER_RULES) clib-68000-$(LIB_MODEL).a --list-file=hello-debug.lst --cross-reference --rtattr printf=reduced --semi-hosted --target=Foenix
+  --stack-size=2000 --sstack-size=800
 
 hello.pgz:  $(OBJS) $(FOENIX_LIB)
-	ln68k -o $@ $^ $(FOENIX_LINKER_RULES) clib-68000-$(LIB_MODEL)-Foenix.a --output-format=pgz --list-file=hello-Foenix.lst --cross-reference --rtattr printf=reduced --rtattr cstartup=Foenix
+	ln68k -o $@ $^ $(FOENIX_LINKER_RULES) clib-68000-$(LIB_MODEL)-Foenix.a --output-format=pgz --list-file=hello-Foenix.lst --cross-reference --rtattr printf=reduced --rtattr cstartup=Foenix_user
 
 $(FOENIX_LIB):
 	(cd $(FOENIX) ; make all)
