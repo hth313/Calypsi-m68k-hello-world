@@ -1,4 +1,5 @@
 VPATH = src
+DEPDIR := .deps
 
 FOENIX = module/Calypsi-m68k-Foenix
 
@@ -20,13 +21,15 @@ OBJS_DEBUG = $(ASM_SRCS:%.s=obj/%-debug.o) $(C_SRCS:%.c=obj/%-debug.o)
 obj/%.o: %.s
 	as68k --core=68000 $(MODEL) --target=Foenix --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
-obj/%.o: %.c
+obj/%.o: %.c $(DEPDIR)/%.d | $(DEPDIR)
+	@cc68k --core=68000 $(MODEL) --target=Foenix --debug --dependencies -MQ$@ >$(DEPDIR)/$*.d $<
 	cc68k --core=68000 $(MODEL) --target=Foenix --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
 obj/%-debug.o: %.s
 	as68k --core=68000 $(MODEL) --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
-obj/%-debug.o: %.c
+obj/%-debug.o: %.c $(DEPDIR)/%-debug.d | $(DEPDIR)
+	@cc68k --core=68000 $(MODEL) --debug --dependencies -MQ$@ >$(DEPDIR)/$*-debug.d $<
 	cc68k --core=68000 $(MODEL) --debug --list-file=$(@:%.o=%.lst) -o $@ $<
 
 hello.elf: $(OBJS_DEBUG)
@@ -42,6 +45,14 @@ $(FOENIX_LIB):
 	(cd $(FOENIX) ; make all)
 
 clean:
+	-rm $(DEPFILES)
 	-rm $(OBJS) $(OBJS:%.o=%.lst) $(OBJS_DEBUG) $(OBJS_DEBUG:%.o=%.lst) $(FOENIX_LIB)
 	-rm hello.elf hello.pgz hello-debug.lst hello-Foenix.lst
 	-(cd $(FOENIX) ; make clean)
+
+$(DEPDIR): ; @mkdir -p $@
+
+DEPFILES := $(C_SRCS:%.c=$(DEPDIR)/%.d) $(C_SRCS:%.c=$(DEPDIR)/%-debug.d)
+$(DEPFILES):
+
+include $(wildcard $(DEPFILES))
